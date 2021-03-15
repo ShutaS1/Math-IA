@@ -138,4 +138,3 @@ let j=1000000
 for (let i = 0; i < j; i++) {
   Getpi()
 }
- 
