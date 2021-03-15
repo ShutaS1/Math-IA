@@ -20,12 +20,12 @@ let Getpi=()=>{
     for (let n = 0; n < 38; n++) Hand[PieSet[tile[n] % 34]]++
   
     // finish making hand, now check if win
-//------Test Hand-------------
+    //------Test Hand-------------
     const orphans13=[0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1]
     const tenhosample=[0,1,1,1,1,1,1,1,1,1,0,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     const onlyheadsample=[0,0,2,1,1,1,1,0,1,1,0,3,0,0,0,1,2]
     const chiitoisample=[0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,2,0,0,0,0]
-    //Hand=[].concat(tenhosample)
+    Hand=[].concat(tenhosample)
     //-------Test Hand-----------
 
     let Phead=[]  //possible head
@@ -120,7 +120,7 @@ let Getpi=()=>{
     return resolve()
     
   }).catch(e=>{
-    console.log("fail");
+    console.log("fail: "+e);
     Numtrial++
     return resolve()
   })
