@@ -8,6 +8,12 @@ const PieSet = [
 ]
 let Numtrial=0
 let success=0
+
+const orphans13=[0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1]
+const tenhosample=[0,1,1,1,1,1,1,1,1,1,0,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+const onlyheadsample=[0,0,2,1,1,1,1,0,1,1,0,3,0,0,0,1,2]
+const chiitoisample=[0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,2,0,0,0,0]
+
 let Getpi=()=>{
   return new Promise( function( resolve, reject ) {
     let Hand = new Array(38).fill(0), tile = new Array(14).fill(0)
@@ -22,10 +28,6 @@ let Getpi=()=>{
   
     // finish making hand, now check if win
     //------Test Hand-------------
-    const orphans13=[0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1]
-    const tenhosample=[0,1,1,1,1,1,1,1,1,1,0,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    const onlyheadsample=[0,0,2,1,1,1,1,0,1,1,0,3,0,0,0,1,2]
-    const chiitoisample=[0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,2,0,0,0,0]
     //Hand=[].concat(tenhosample)
     //-------Test Hand-----------
 
@@ -107,34 +109,37 @@ let Getpi=()=>{
   })
   //now groups
   head.then((num)=>{
+    success++
+    Numtrial++
     let out=""
     Hand.forEach((a,ind)=>{
       if(ind%10===1) out+=" "
-      if(ind%10===0) out+="\n"
+      if(ind/10===1) out=`${out}\tNumtrial:${Numtrial}\n`
+      if(ind/10===2) out=`${out}\tSucceeded:${num}\n`
+      if(ind/10===3) out=`${out}\n`
       out+=a
     })
     console.log(out);
-    console.log(`\nNumtrial:${Numtrial}\nSucceeded:${num}`)
-    success++
-    Numtrial++
-    console.timeLog("Time")
-    if(Numtrial===j-1) {
-      console.log("Calculation Ended:"+"")
-      console.timeEnd("Time")
-    }    return resolve()
-    
+    progress()
+    return resolve()
   }).catch(e=>{
-    //console.log("fail: "+e);
     Numtrial++
-    if(Numtrial===j-1) {
-      console.log("Calculation Ended:"+"")
-      console.timeEnd("Time")
-    }
+    progress()
     return resolve()
   })
 })
 }
-let j=1000000
+const j=1000000
 for (let i = 0; i < j; i++) {
   Getpi()
+}
+
+function progress(){
+  if(Numtrial%(j/10)===0){
+    console.log(Numtrial/j*100+"% done")
+    if(Numtrial===j) {
+      console.log("Calculation Ended"+"")
+      console.timeEnd("Time")
+    }
+  }
 }
