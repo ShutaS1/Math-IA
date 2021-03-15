@@ -10,12 +10,13 @@ let Numtrial=0
 let success=0
 let Getpi=()=>{
   return new Promise( function( resolve, reject ) {
+    let Hand = new Array(38).fill(0), tile = new Array(14).fill(0)
+
   //------------
   //Resolved num: 0:fail 1:success 2:chiitoi 3:kokushi 4:undefined
   let head = new Promise(async function(resolve, reject) {
     let org=[]
     for (let a=0; a<136; a++) org.push(a)
-    let Hand = new Array(38).fill(0), tile = new Array(14).fill(0)
     for (let k = 0; k < 14; k++) tile[k] = org.splice(Math.random()*(135-k)|0,1)
     for (let n = 0; n < 38; n++) Hand[PieSet[tile[n] % 34]]++
   
@@ -25,7 +26,7 @@ let Getpi=()=>{
     const tenhosample=[0,1,1,1,1,1,1,1,1,1,0,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     const onlyheadsample=[0,0,2,1,1,1,1,0,1,1,0,3,0,0,0,1,2]
     const chiitoisample=[0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,2,0,0,0,0]
-    Hand=[].concat(tenhosample)
+    //Hand=[].concat(tenhosample)
     //-------Test Hand-----------
 
     let Phead=[]  //possible head
@@ -114,16 +115,26 @@ let Getpi=()=>{
     })
     console.log(out);
     console.log(`\nNumtrial:${Numtrial}\nSucceeded:${num}`)
-    console.timeEnd("Time")
     success++
     Numtrial++
-    return resolve()
+    console.timeLog("Time")
+    if(Numtrial===j-1) {
+      console.log("Calculation Ended:"+"")
+      console.timeEnd("Time")
+    }    return resolve()
     
   }).catch(e=>{
-    console.log("fail: "+e);
+    //console.log("fail: "+e);
     Numtrial++
+    if(Numtrial===j-1) {
+      console.log("Calculation Ended:"+"")
+      console.timeEnd("Time")
+    }
     return resolve()
   })
 })
 }
-Getpi()
+let j=1000000
+for (let i = 0; i < j; i++) {
+  Getpi()
+}
