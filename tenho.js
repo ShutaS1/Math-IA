@@ -129,11 +129,16 @@ let Getpi=()=>{
   })
 })
 }
-const j=1000000
-for (let i = 0; i < j; i++) {
-  Getpi()
+let j=10000000
+calc()
+async function calc() {
+  for (let i = 0; i < j/10000; i++) {
+    for (let k = 0; k < 10000; k++) {
+      Getpi()      
+    }
+    while(Numtrial<=10000*(i+1)-1) await sleep(1)
+  }
 }
-
 function progress(){
   if(Numtrial%(j/10)===0){
     console.log(Numtrial/j*100+"% done")
