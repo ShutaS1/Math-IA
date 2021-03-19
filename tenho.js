@@ -7,8 +7,12 @@ const PieSet = [
   31, 32, 33, 34, 35, 36, 37          //w
 ]
 let Numtrial=0
-let success=0
-
+let result={
+  success:0,
+  chiitoi:0,
+  kokushi:0,
+  other:0
+}
 const orphans13=[0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1]
 const tenhosample=[0,1,1,1,1,1,1,1,1,1,0,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 const onlyheadsample=[0,0,2,1,1,1,1,0,1,1,0,3,0,0,0,1,2]
@@ -109,7 +113,8 @@ let Getpi=()=>{
   })
   //now groups
   head.then((num)=>{
-    success++
+    result.success++
+    result[num]++
     Numtrial++
     let out=""
     Hand.forEach((a,ind)=>{
@@ -119,7 +124,7 @@ let Getpi=()=>{
       if(ind/10===3) out=`${out}\n`
       out+=a
     })
-    console.log(out);
+    console.log(out+"\n");
     progress()
     return resolve()
   }).catch(e=>{
@@ -145,6 +150,7 @@ function progress(){
     if(Numtrial===j) {
       console.log("Calculation Ended"+"")
       console.timeEnd("Time")
+      console.log(`Numtrial:${Numtrial} Sucess:${result.success} Chiitoi:${result.chiitoi} Kokushi:${result.kokushi} Other:${result.other}`)
     }
   }
 }
