@@ -17,55 +17,53 @@ const sample=require('./sample')
 
 let Getpi=()=>{
   return new Promise( function( resolve, reject ) {
-    let Hand = new Array(38).fill(0), tile = new Array(14).fill(0)
-
-  //------------
+    let Hand = new Array(38).fill(0)
   //Resolved num: 0:fail 1:success 2:chiitoi 3:kokushi 4:undefined
   let FindHead = new Promise(async function(resolve, reject) {
     let org=[]
-    for (let a=0; a<136; a++) org.push(a)
-    for (let k = 0; k < 14; k++) tile[k] = org.splice(Math.random()*(135-k)|0,1)
-    for (let n = 0; n < 38; n++) Hand[PieSet[tile[n] % 34]]++
-  
+    for (let m=0; m<136; m++) org.push(m)
+    for (let m=0; m<14; m++) Hand[PieSet[org.splice(Math.random() * (136 - m) | 0, 1) % 34]]++
     // finish making hand, now check if win
     //------Test Hand-------------
     //Hand=[].concat(tenhosample)
     //-------Test Hand-----------
 
-    let Head_temp=[], Head, Pairs=0, kokushi=true
-    let a
+    let Head_Temp=[], Head, Pairs=[], Kokushi_Flag=true
     Hand.forEach((val, ind)=>{
-      if(val===2) Pairs++
-      a=val?true:false
-      if (a^sample.kokushi[ind]) kokushi=false
+      if(val>=2) Pairs.push(ind)
+      const a=val?true:false
+      if (a^sample.kokushi[ind]) Kokushi_Flag=false
     })
-    if(!Pairs) return reject('No head')
-    if (Pairs===7) return resolve("chiitoi") //7 pair
-    if (kokushi) return resolve("kokushi")
+    if(!Pairs.length) return reject('No head')
+    if (Pairs.length===7) return resolve("chiitoi") //7 pair
+    if (Kokushi_Flag) return resolve("kokushi")
     //removed 7p and 13orphans
+    //lone tile->return
+    for (let m=0; m<38; m++)if((Hand[m]===1||Hand[m]===4)&&(m>30||(!Hand[m + 1]&&!Hand[m - 1])))return reject("Failed: Lone tile");
     //now find head
-
-    for(let k=0;k<Hand.length;k++){
-      if ((Hand[k] === 1 || Hand[k] === 4) && (k > 30 || !(Hand[k + 1] || Hand[k - 1]))) return reject("Failed: Lone tile"); //if W is alone or 4, reject
-      if (k <= 30 && Hand[k] > 1) //find possible head on number tile
-        if (Hand[k] === 2 && !Hand[k + 1] && !Hand[k - 1]) //find confirmed head 
-          if (Head) return reject("Failed: Too many heads");
-          else Head = k;
-        else Head_temp.push(k);
-      if (k > 30 && Hand[k] === 2)
-        if (Head)return reject("Too many heads");
-        else Head = k;
+    let Head_id
+    for(let m=0;m<Pairs.length;m++){
+      Head_id=Pairs[m]
+      if (Hand[Head_id] === 2){
+        if((Head_id>30) || (!Hand[Head_id+1] && !Hand[Head_id-1])){ //honor or lone pair
+          if (Head) return reject("Failed: Too many heads")
+          else Head = Head_id;
+        }
+      }
+      else if(!Head && Head_id<30 && (Hand[Head_id+1] || Hand[Head_id-1])){ //3or4, not honor neither lone
+        Head_Temp.push(Head_id)
+      }
     }
 
     if(Head){
-      const c=await Findblock(Head)
-      if(c) return resolve("other")
+      const Flag_4Blocks=await Findblock(Head)
+      if(Flag_4Blocks) return resolve("other")
       else return reject("Failed: No 4 block")
     }
-    else if(Head_temp.length){
-      for(let k=0;k<Head_temp.length;k++){
-        const c=await Findblock(Head_temp[k])
-        if(c) return resolve("other")
+    else if(Head_Temp.length){
+      for(let m=0;m<Head_Temp.length;m++){
+        const Flag_4Blocks=await Findblock(Head_Temp[m])
+        if(Flag_4Blocks) return resolve("other")
       }
       return reject("Failed: No 4 block")
     }
@@ -85,16 +83,16 @@ let Getpi=()=>{
           else Triplet.push(ind)
         }
       })
-      for (let k = 0; k < 2**Triplet.length; k++) {
-        let b=Array.from(k.toString(2))
+      for (let m = 0; m < 2**Triplet.length; m++) {
+        let b=Array.from(m.toString(2))
         b.forEach((val,ind)=>{
           if(parseInt(val)===1) TryHand[Triplet[ind]]-=3
         })
         if(!Remainblock) return 1 //su-anko-nya-!
-        for(let d=0;d<38;d++){
-          while (TryHand[d]) {
-            if(TryHand[d+1] && TryHand[d+2]){
-              for (let c = 0; c < 3; c++) TryHand[d+c]--
+        for(let n=0;n<38;n++){
+          while (TryHand[n]) {
+            if(TryHand[n+1] && TryHand[n+2]){
+              for(let o=0; o<3; o++) TryHand[n+o]--
               Remainblock--
               if(!Remainblock) return 1
             }
@@ -124,19 +122,21 @@ let Getpi=()=>{
     return resolve()
   }).catch(e=>{
     Numtrial++
+    //console.log(e);
     progress()
     return resolve()
   })
 })
 }
-let j=100000
+
+let j=1000000
 calc()
 async function calc() {
-  for (let i = 0; i < j/10000; i++) {
-    for (let k = 0; k < 10000; k++) {
+  for (let m = 0; m < j/10000; m++) {
+    for (let n = 0; n < 10000; n++) {
       Getpi()      
     }
-    while(Numtrial<=10000*(i+1)-1) await sleep(1)
+    while(Numtrial<=10000*(m+1)-1) await sleep(1)
   }
 }
 function progress(){
