@@ -13,10 +13,7 @@ let result={
   kokushi:0,
   other:0
 }
-const orphans13=[0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1]
-const tenhosample=[0,1,1,1,1,1,1,1,1,1,0,3,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-const onlyheadsample=[0,0,2,1,1,1,1,0,1,1,0,3,0,0,0,1,2]
-const chiitoisample=[0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,2,0,0,0,0]
+const sample=require('./sample')
 
 let Getpi=()=>{
   return new Promise( function( resolve, reject ) {
@@ -24,7 +21,7 @@ let Getpi=()=>{
 
   //------------
   //Resolved num: 0:fail 1:success 2:chiitoi 3:kokushi 4:undefined
-  let head = new Promise(async function(resolve, reject) {
+  let FindHead = new Promise(async function(resolve, reject) {
     let org=[]
     for (let a=0; a<136; a++) org.push(a)
     for (let k = 0; k < 14; k++) tile[k] = org.splice(Math.random()*(135-k)|0,1)
@@ -35,17 +32,15 @@ let Getpi=()=>{
     //Hand=[].concat(tenhosample)
     //-------Test Hand-----------
 
-    let Phead=[]  //possible head
-    let Chead     //confirmed head
-    let chiitoi=0
-    let kokushi=true
+    let Head_temp=[], Head, Pairs=0, kokushi=true
     let a
     Hand.forEach((val, ind)=>{
-      if(val===2) chiitoi++
+      if(val===2) Pairs++
       a=val?true:false
-      if (a^orphans13[ind]) kokushi=false
+      if (a^sample.kokushi[ind]) kokushi=false
     })
-    if (chiitoi===7) return resolve("chiitoi") //7 pair
+    if(!Pairs) return reject('No head')
+    if (Pairs===7) return resolve("chiitoi") //7 pair
     if (kokushi) return resolve("kokushi")
     //removed 7p and 13orphans
     //now find head
@@ -54,22 +49,22 @@ let Getpi=()=>{
       if ((Hand[k] === 1 || Hand[k] === 4) && (k > 30 || !(Hand[k + 1] || Hand[k - 1]))) return reject("Failed: Lone tile"); //if W is alone or 4, reject
       if (k <= 30 && Hand[k] > 1) //find possible head on number tile
         if (Hand[k] === 2 && !Hand[k + 1] && !Hand[k - 1]) //find confirmed head 
-          if (Chead) return reject("Failed: Too many heads");
-          else Chead = k;
-        else Phead.push(k);
+          if (Head) return reject("Failed: Too many heads");
+          else Head = k;
+        else Head_temp.push(k);
       if (k > 30 && Hand[k] === 2)
-        if (Chead)return reject("Too many heads");
-        else Chead = k;
+        if (Head)return reject("Too many heads");
+        else Head = k;
     }
 
-    if(Chead){
-      const c=await Findblock(Chead)
+    if(Head){
+      const c=await Findblock(Head)
       if(c) return resolve("other")
       else return reject("Failed: No 4 block")
     }
-    else if(Phead.length){
-      for(let k=0;k<Phead.length;k++){
-        const c=await Findblock(Phead[k])
+    else if(Head_temp.length){
+      for(let k=0;k<Head_temp.length;k++){
+        const c=await Findblock(Head_temp[k])
         if(c) return resolve("other")
       }
       return reject("Failed: No 4 block")
@@ -112,7 +107,7 @@ let Getpi=()=>{
     
   })
   //now groups
-  head.then((num)=>{
+  FindHead.then((num)=>{
     result.success++
     result[num]++
     Numtrial++
@@ -134,7 +129,7 @@ let Getpi=()=>{
   })
 })
 }
-let j=10000000
+let j=100000
 calc()
 async function calc() {
   for (let i = 0; i < j/10000; i++) {
