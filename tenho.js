@@ -16,6 +16,7 @@ let result={
 const sample=require('./sample')
 
 let Getpi=()=>{
+  const Time_0=Date.now()
   return new Promise( function( resolve, reject ) {
     let Hand = new Array(38).fill(0)
   //Resolved num: 0:fail 1:success 2:chiitoi 3:kokushi 4:undefined
@@ -39,7 +40,16 @@ let Getpi=()=>{
     if (Kokushi_Flag) return resolve("kokushi")
     //removed 7p and 13orphans
     //lone tile->return
-    for (let m=0; m<38; m++)if((Hand[m]===1||Hand[m]===4)&&(m>30||(!Hand[m + 1]&&!Hand[m - 1])))return reject("Failed: Lone tile");
+
+    let Tile_Under=false, Tile_Mid=false, Tile_Upper=false
+    for (let m=0; m<38; m++){
+      if(Hand[m]===1||Hand[m]===4){
+        Tile_Under=(m%10<=2)?false:(Hand[m-1]&&Hand[m-2])
+        Tile_Mid=(m%10<=1||m%10>=9)?false:(Hand[m-1]&&Hand[m+1])
+        Tile_Upper=(m%10>=8)?false:(Hand[m+1]&&Hand[m+2])
+        if(m>30||!(Tile_Under||Tile_Mid||Tile_Upper)) return reject("Failed: Lone tile");
+      }
+    }
     //now find head
     let Head_id
     for(let m=0;m<Pairs.length;m++){
@@ -71,7 +81,7 @@ let Getpi=()=>{
     async function Findblock(a) { //gets id of head
       let Remainblock=4
       let TryHand=[].concat(Hand)
-      TryHand[a]-=2
+      TryHand[a]-=2 //take head out
       let Triplet=[]
       TryHand.forEach((val,ind,arr)=>{
         if(val>=3) {
@@ -89,14 +99,17 @@ let Getpi=()=>{
           if(parseInt(val)===1) TryHand[Triplet[ind]]-=3
         })
         if(!Remainblock) return 1 //su-anko-nya-!
-        for(let n=0;n<38;n++){
-          while (TryHand[n]) {
+        let Fail_Flag=false
+        for(let n=0;n<38||!Fail_Flag;n++){
+          while (TryHand[n] && !Fail_Flag) {
+            const Time_1=Date.now()
+            if(Time_1-Time_0>100) console.log(Hand);
             if(TryHand[n+1] && TryHand[n+2]){
               for(let o=0; o<3; o++) TryHand[n+o]--
               Remainblock--
               if(!Remainblock) return 1
             }
-            else return 0
+            else Fail_Flag=true
           }
         }
       }
@@ -129,7 +142,7 @@ let Getpi=()=>{
 })
 }
 
-let j=1000000
+let j=10000000
 calc()
 async function calc() {
   for (let m = 0; m < j/10000; m++) {
