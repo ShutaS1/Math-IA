@@ -9,6 +9,9 @@ const PieSet = [
 let Numtrial=0
 let result={
   success:0,
+  pinhu:0,
+  sannanko:0,
+  suuanko:0,
   chiitoi:0,
   kokushi:0,
   other:0
@@ -36,8 +39,8 @@ function Getpi(){
         if (a^sample.kokushi[ind]) Kokushi_Flag=false
       })
       if(!Pairs.length) return reject('No head')
-      if (Pairs.length===7) return resolve("chiitoi") //7 pair
-      if (Kokushi_Flag) return resolve("kokushi")
+      if (Pairs.length===7) return resolve(7) //7 pair
+      if (Kokushi_Flag) return resolve(13)
       //removed 7p and 13orphans
       //lone tile->return
 
@@ -67,53 +70,59 @@ function Getpi(){
 
       if(Head){
         const Flag_4Blocks=await Findblock(Head)
-        if(Flag_4Blocks) return resolve("other")
+        if(Flag_4Blocks>0) return resolve(Flag_4Blocks)
         else return reject("Failed: No 4 block")
       }
       else if(Head_Temp.length){
         for(let m=0;m<Head_Temp.length;m++){
           const Flag_4Blocks=await Findblock(Head_Temp[m])
-          if(Flag_4Blocks) return resolve("other")
+          if(Flag_4Blocks>0) return resolve(Flag_4Blocks)
         }
         return reject("Failed: No 4 block")
       }
       else reject("Failed: No head exist")
       async function Findblock(a) { //gets id of head
-        let Remainblock=4
+        let Block_Count=0, Triplet_Count=0
         let TryHand=[].concat(Hand)
         TryHand[a]-=2 //take head out
-        let Triplet=[]
-        TryHand.forEach((val,ind,arr)=>{
-          if(val>=3) {
-            if(!(arr[ind + 1] || arr[ind - 1])){ //alone triplets
-              TryHand[ind]-=3
-              Remainblock--
-              if(!Remainblock) return 1 //su-anko-nya-! return for Findblock
+        let Triplet_Temp=[]
+        for (let m = 0; m < 38; m++) {
+          if(TryHand[m]>=3) {
+            Tile_Under=(m%10<=2)?false:(TryHand[m-1]&&TryHand[m-2])
+            Tile_Mid=(m%10<=1||m%10>=9)?false:(TryHand[m-1]&&TryHand[m+1])
+            Tile_Upper=(m%10>=8)?false:(TryHand[m+1]&&TryHand[m+2])
+            if(!(Tile_Under||Tile_Mid||Tile_Upper)){ //alone triplets
+              TryHand[m]-=3
+              Block_Count++
+              Triplet_Count++
+              if(Block_Count===4) return 4 //su-anko-nya-! return for Findblock
             }
-            else Triplet.push(ind)
+            else Triplet_Temp.push(m)
           }
-        })
-        for (let m = 0; m < 2**Triplet.length; m++) {
-          let b=Array.from(m.toString(2))
-          b.forEach((val,ind)=>{
-            if(parseInt(val)===1) TryHand[Triplet[ind]]-=3
-          })
-          if(!Remainblock) return 1 //su-anko-nya-!
+        }
+        for (let m = 0; m < 2**Triplet_Temp.length; m++) {
+          let TryHand_Temp=[].concat(TryHand)
+          for(let n=0; n<3; n++){
+            if(m&2**n){
+              TryHand_Temp[Triplet_Temp[n]]-=3
+              Block_Count++
+              Triplet_Count++
+            }
+          }
+          if(Block_Count===4) return 4 //su-anko-nya-!
           let Fail_Flag=false
-          for(let n=0;n<38||!Fail_Flag;n++){
-            while (TryHand[n] && !Fail_Flag) {
-              const Time_1=Date.now()
-              if(Time_1-Time_0>100) console.log(Hand);
-              if(TryHand[n+1] && TryHand[n+2]){
-                for(let o=0; o<3; o++) TryHand[n+o]--
-                Remainblock--
-                if(!Remainblock) return 1
+          for(let n=0;n<38&&!Fail_Flag;n++){
+            while (TryHand_Temp[n] && !Fail_Flag) {
+              if(TryHand_Temp[n+1] && TryHand_Temp[n+2]){
+                for(let o=0; o<3; o++) TryHand_Temp[n+o]--
+                Block_Count++
+                if(Block_Count===4) return Triplet_Count
               }
               else Fail_Flag=true
             }
           }
-        }
-        return 0
+        } 
+        return -1
       }
       
     })
@@ -122,15 +131,16 @@ function Getpi(){
   let promise = Promise.resolve();
   promise
   .then(FindHead)
-  .then((num)=>{
+  .then(async num =>{
+    const Type = await convert(num)
     result.success++
-    result[num]++
+    result[Type]++
     Numtrial++
     let out=""
     Hand.forEach((a,ind)=>{
       if(ind%10===1) out+=" "
       if(ind/10===1) out=`${out}\tNumtrial:${Numtrial}\n`
-      if(ind/10===2) out=`${out}\tSucceeded:${num}\n`
+      if(ind/10===2) out=`${out}\tSucceeded:${Type}\n`
       if(ind/10===3) out=`${out}\n`
       out+=a
     })
@@ -158,8 +168,28 @@ function progress(){
     if(Numtrial===j) {
       console.log("Calculation Ended"+"")
       console.timeEnd("Time")
-      console.log(`Numtrial:${Numtrial} Sucess:${result.success} Chiitoi:${result.chiitoi} Kokushi:${result.kokushi} Other:${result.other}`)
+      console.log(`Numtrial:${Numtrial} Sucess:${result.success} Pinhu:${result.pinhu} Sannanko:${result.sannanko} Chiitoi:${result.chiitoi} Kokushi:${result.kokushi} Other:${result.other}`)
     }
   }
 }
 //
+
+async function convert(a){
+  switch(a){
+    case 0:
+      return "pinhu"
+    case 1:
+    case 2:
+      return "other"
+    case 3:
+      return "sannanko"
+    case 4:
+      return "suuanko"
+    case 7:
+      return "chiitoi"
+    case 13:
+      return "kokushi"
+    default:
+      console.log("Error occured: unknown hand type")
+  }
+}
