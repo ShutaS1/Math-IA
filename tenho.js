@@ -20,8 +20,7 @@ const sample=require('./sample')
 
 function Getpi(){
   let Hand = new Array(38).fill(0)
-  //Resolved num: 0:fail 1:success 2:chiitoi 3:kokushi 4:undefined
-  function FindHead(){
+  function FindHead(){  
     return new Promise(async function(resolve, reject) {
       let org=[]
       for (let m=0; m<136; m++) org.push(m)
@@ -145,7 +144,7 @@ function Getpi(){
     progress()
   })
 }
-let j = 10000000
+let j = 1000000
 calc()
 async function calc() {
   for (let m = 0; m < j/10000; m++) {
@@ -197,10 +196,11 @@ async function convert(a){
  * @returns boolean if loan
  */
 async function FindLone(Hand, m) {
+  if(m>30) return true
   const Tile_Under = (m % 10 <= 2) ? false : (Hand[m - 1] && Hand[m - 2])
   const Tile_Mid = (m % 10 === 1 || m % 10 === 9) ? false : (Hand[m - 1] && Hand[m + 1])
   const Tile_Upper = (m % 10 >= 8) ? false : (Hand[m + 1] && Hand[m + 2])
-  if (m > 30 || !(Tile_Under || Tile_Mid || Tile_Upper)) return true
+  if (!(Tile_Under || Tile_Mid || Tile_Upper)) return true
   else return false
 }
 
