@@ -43,7 +43,7 @@ function Getpi(){
       //lone tile->return
       for (let m=0; m<38; m++){
         if (Hand[m] === 1 || Hand[m] === 4) {
-          const Loan_Flag=await FindLoan(Hand,m)
+          const Loan_Flag=await FindLone(Hand,m)
           if(Loan_Flag) return reject("Failed: Lone tile")
         }
       }
@@ -51,7 +51,7 @@ function Getpi(){
       let Head_id
       for(let m=0;m<Pairs.length;m++){
         Head_id = Pairs[m]
-        const Loan_Flag = await FindLoan(Hand, Head_id)
+        const Loan_Flag = await FindLone(Hand, Head_id)
         if (Hand[Head_id] === 2) {
           if (Loan_Flag) { //honor or lone pair
             if (Head) return reject("Failed: Too many heads")
@@ -82,7 +82,7 @@ function Getpi(){
         let Triplet_Temp=[]
         for (let m = 0; m < 38; m++) {
           if(TryHand[m]>=3) {
-            const Loan_Flag = FindLoan(TryHand, m)
+            const Loan_Flag = FindLone(TryHand, m)
             if(Loan_Flag){ //alone triplets
               TryHand[m]-=3
               Block_Count++
@@ -169,8 +169,6 @@ function progress(){
     }
   }
 }
-//
-
 
 async function convert(a){
   switch(a){
@@ -194,11 +192,11 @@ async function convert(a){
 
 /**
  * 
- * @param {Arrar} Hand Hand to judge
+ * @param {Array} Hand Hand to judge
  * @param {number} m id of the tile to judge
  * @returns boolean if loan
  */
-async function FindLoan(Hand, m) {
+async function FindLone(Hand, m) {
   const Tile_Under = (m % 10 <= 2) ? false : (Hand[m - 1] && Hand[m - 2])
   const Tile_Mid = (m % 10 === 1 || m % 10 === 9) ? false : (Hand[m - 1] && Hand[m + 1])
   const Tile_Upper = (m % 10 >= 8) ? false : (Hand[m + 1] && Hand[m + 2])
@@ -206,7 +204,7 @@ async function FindLoan(Hand, m) {
   else return false
 }
 
- async function transform(input){
+/* async function transform(input){
   let Fin_Flag=false
   console.log("Input: " + input);
   let Theout = new Array(38).fill(0)
@@ -253,3 +251,4 @@ async function FindLoan(Hand, m) {
   while (!Fin_Flag) await sleep(1)
   return Theout
 }
+*/
