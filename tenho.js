@@ -6,8 +6,8 @@ const PieSet = [
   21, 22, 23, 24, 25, 26, 27, 28, 29,   //p
   31, 32, 33, 34, 35, 36, 37          //w
 ]
-let Numtrial=0
-let result={
+let Numtrial = 0
+let result = {
   success:0,
   pinhu:0,
   sannanko:0,
@@ -19,7 +19,6 @@ let result={
 const sample=require('./sample')
 
 function Getpi(){
-  const Time_0=Date.now()
   let Hand = new Array(38).fill(0)
   //Resolved num: 0:fail 1:success 2:chiitoi 3:kokushi 4:undefined
   function FindHead(){
@@ -31,8 +30,7 @@ function Getpi(){
       //------Test Hand-------------
       //Hand=[].concat(tenhosample)
       //-------Test Hand-----------
-
-      let Head_Temp=[], Head, Pairs=[], Kokushi_Flag=true
+      let Head_Temp=[], Head=0, Pairs=[], Kokushi_Flag=true
       Hand.forEach((val, ind)=>{
         if(val>=2) Pairs.push(ind)
         const a=val?true:false
@@ -43,40 +41,36 @@ function Getpi(){
       if (Kokushi_Flag) return resolve(13)
       //removed 7p and 13orphans
       //lone tile->return
-
-      let Tile_Under=false, Tile_Mid=false, Tile_Upper=false
       for (let m=0; m<38; m++){
-        if(Hand[m]===1||Hand[m]===4){
-          Tile_Under=(m%10<=2)?false:(Hand[m-1]&&Hand[m-2])
-          Tile_Mid=(m%10<=1||m%10>=9)?false:(Hand[m-1]&&Hand[m+1])
-          Tile_Upper=(m%10>=8)?false:(Hand[m+1]&&Hand[m+2])
-          if(m>30||!(Tile_Under||Tile_Mid||Tile_Upper)) return reject("Failed: Lone tile");
+        if (Hand[m] === 1 || Hand[m] === 4) {
+          const Loan_Flag=await FindLoan(Hand,m)
+          if(Loan_Flag) return reject("Failed: Lone tile")
         }
       }
       //now find head
       let Head_id
       for(let m=0;m<Pairs.length;m++){
-        Head_id=Pairs[m]
-        if (Hand[Head_id] === 2){
-          if((Head_id>30) || (!Hand[Head_id+1] && !Hand[Head_id-1])){ //honor or lone pair
+        Head_id = Pairs[m]
+        const Loan_Flag = await FindLoan(Hand, Head_id)
+        if (Hand[Head_id] === 2) {
+          if (Loan_Flag) { //honor or lone pair
             if (Head) return reject("Failed: Too many heads")
             else Head = Head_id;
           }
+          if (!Head) Head_Temp.push(Head_id)
         }
-        else if(!Head && Head_id<30 && (Hand[Head_id+1] || Hand[Head_id-1])){ //3or4, not honor neither lone
-          Head_Temp.push(Head_id)
-        }
+        else if (!Loan_Flag) Head_Temp.push(Head_id)
       }
 
       if(Head){
         const Flag_4Blocks=await Findblock(Head)
-        if(Flag_4Blocks>0) return resolve(Flag_4Blocks)
+        if(Flag_4Blocks>=0) return resolve(Flag_4Blocks)
         else return reject("Failed: No 4 block")
       }
       else if(Head_Temp.length){
         for(let m=0;m<Head_Temp.length;m++){
           const Flag_4Blocks=await Findblock(Head_Temp[m])
-          if(Flag_4Blocks>0) return resolve(Flag_4Blocks)
+          if (Flag_4Blocks >= 0) return resolve(Flag_4Blocks)
         }
         return reject("Failed: No 4 block")
       }
@@ -88,10 +82,8 @@ function Getpi(){
         let Triplet_Temp=[]
         for (let m = 0; m < 38; m++) {
           if(TryHand[m]>=3) {
-            Tile_Under=(m%10<=2)?false:(TryHand[m-1]&&TryHand[m-2])
-            Tile_Mid=(m%10<=1||m%10>=9)?false:(TryHand[m-1]&&TryHand[m+1])
-            Tile_Upper=(m%10>=8)?false:(TryHand[m+1]&&TryHand[m+2])
-            if(!(Tile_Under||Tile_Mid||Tile_Upper)){ //alone triplets
+            const Loan_Flag = FindLoan(TryHand, m)
+            if(Loan_Flag){ //alone triplets
               TryHand[m]-=3
               Block_Count++
               Triplet_Count++
@@ -100,7 +92,7 @@ function Getpi(){
             else Triplet_Temp.push(m)
           }
         }
-        for (let m = 0; m < 2**Triplet_Temp.length; m++) {
+        for (let m = 0; m < 2**Triplet_Temp.length; m++){
           let TryHand_Temp=[].concat(TryHand)
           for(let n=0; n<3; n++){
             if(m&2**n){
@@ -111,8 +103,9 @@ function Getpi(){
           }
           if(Block_Count===4) return 4 //su-anko-nya-!
           let Fail_Flag=false
-          for(let n=0;n<38&&!Fail_Flag;n++){
-            while (TryHand_Temp[n] && !Fail_Flag) {
+          for(let n=0;n<30&&!Fail_Flag;n++){
+            if(n%10>=8 && TryHand_Temp[n]) Fail_Flag=true
+            while (n%10<8 && TryHand_Temp[n] && !Fail_Flag) {
               if(TryHand_Temp[n+1] && TryHand_Temp[n+2]){
                 for(let o=0; o<3; o++) TryHand_Temp[n+o]--
                 Block_Count++
@@ -146,13 +139,13 @@ function Getpi(){
     })
     console.log(out+"\n");
     progress()
-  }).catch(()=>{
+  }).catch((e)=>{
     Numtrial++
     //console.log(e);
     progress()
   })
 }
-let j=1000000
+let j = 10000000
 calc()
 async function calc() {
   for (let m = 0; m < j/10000; m++) {
@@ -168,11 +161,16 @@ function progress(){
     if(Numtrial===j) {
       console.log("Calculation Ended"+"")
       console.timeEnd("Time")
-      console.log(`Numtrial:${Numtrial} Sucess:${result.success} Pinhu:${result.pinhu} Sannanko:${result.sannanko} Chiitoi:${result.chiitoi} Kokushi:${result.kokushi} Other:${result.other}`)
+      console.log(`   Numtrial:${Numtrial} 
+    Sucess:${result.success} Pinhu:${result.pinhu} 
+    Sannanko:${result.sannanko} Chiitoi:${result.chiitoi} 
+    Kokushi:${result.kokushi} Other:${result.other}`)
+
     }
   }
 }
 //
+
 
 async function convert(a){
   switch(a){
@@ -192,4 +190,66 @@ async function convert(a){
     default:
       console.log("Error occured: unknown hand type")
   }
+}
+
+/**
+ * 
+ * @param {Arrar} Hand Hand to judge
+ * @param {number} m id of the tile to judge
+ * @returns boolean if loan
+ */
+async function FindLoan(Hand, m) {
+  const Tile_Under = (m % 10 <= 2) ? false : (Hand[m - 1] && Hand[m - 2])
+  const Tile_Mid = (m % 10 === 1 || m % 10 === 9) ? false : (Hand[m - 1] && Hand[m + 1])
+  const Tile_Upper = (m % 10 >= 8) ? false : (Hand[m + 1] && Hand[m + 2])
+  if (m > 30 || !(Tile_Under || Tile_Mid || Tile_Upper)) return true
+  else return false
+}
+
+ async function transform(input){
+  let Fin_Flag=false
+  console.log("Input: " + input);
+  let Theout = new Array(38).fill(0)
+
+  const ValidInput = input.match(/(\d.+[mspz])+/g);
+  console.log(ValidInput);
+  if (!ValidInput) return console.log("invalid input");
+  const Sets = input.split(/[mspz]/);
+  Sets.pop();
+
+  const Type = input.match(/[mspz]/g);
+
+  for (let a = 0; a < Type.length; a++) {
+    switch (Type[a]) {
+      case "m":
+        Type[a] = 0;
+        break;
+      case "s":
+        Type[a] = 10;
+        break;
+      case "p":
+        Type[a] = 20;
+        break;
+      case "z":
+        Type[a] = 30;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  for (let m = 0; m < Type.length; m++) {
+    let Tiles = Sets[m].split("");
+    for (let a = 0; a < Tiles.length; a++) {
+      Tiles[a] = Number(Tiles[a]) + Type[m];
+    }
+    Tiles.forEach((val) => {
+      Theout[val]++;
+    });
+  }
+  Fin_Flag=true
+
+  while (!Fin_Flag) await sleep(1)
+  return Theout
 }
