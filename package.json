@@ -1,0 +1,23 @@
+{
+  "name": "Math-IA",
+  "version": "1.0.0",
+  "description": "Tenho discrimination code for Math IA",
+  "main": "MathIA.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShutaS1/Math-IA.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShutaS1/Math-IA/issues"
+  },
+  "homepage": "https://github.com/ShutaS1/Math-IA#readme",
+  "dependencies": {
+    "xlsx": "^0.17.0"
+  }
+}
