@@ -4,7 +4,9 @@
   "description": "Tenho discrimination code for Math IA",
   "main": "MathIA.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "read": "node read.js",
+    "run": "node MathIA.js"
   },
   "repository": {
     "type": "git",

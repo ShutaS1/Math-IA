@@ -11,30 +11,23 @@ const chiitoiorg3 = [31, 32, 33]
 let ResArr_Pinhu = new Array(20).fill(0)
 let ResArr_Chiitoi = new Array(20).fill(0)
 
-/*
-*
-*/
-main()
+const excel = require('./src/module')
+const filename = 'data.xlsx'
+const sheetname = 'Sheet1'
+const area="A2:B21"
+
+//main()
+Pinhu()
 async function main() {
     for (let m = 0; m < 100000; m++) {
         await Pinhu()
     }
-    console.log(ResArr_Pinhu);
-    let k = 0
-    ResArr_Pinhu.forEach(num => {
-        k+=num
-    })
-    console.log(k);
-
     for (let m = 0; m < 100000; m++) {
         await MakeChiitoi(4)
     }
-    console.log(ResArr_Chiitoi);
-    let j = 0
-    ResArr_Chiitoi.forEach(num => {
-        j += num
-    })
-    console.log(j);
+    const writedata = [ResArr_Pinhu, ResArr_Chiitoi]
+    await excel.write(writedata, area, sheetname, filename)
+    
 }
 
 //-------------
@@ -48,9 +41,9 @@ async function Pinhu() {
     //make initial hand
     for (let m = 0; m < 14; m++) Hand[PieSet[org.splice(Math.random() * (136 - m) | 0, 1) % 34]]++
     for (let m = 1; m < 20; m++) {
-        //console.log(`Hand in ${m} round:${Hand}`);
+        let convertedHand = await convert(Hand)
+        console.log(`Hand in ${m} round:\n${convertedHand}`);
         const Flag = await FindPinhuHead(Hand,Tsumo)
-        //console.log(`Hand af ${m} round:${Hand}`);
 
         if (Flag) {
             ResArr_Pinhu[m]++
@@ -157,4 +150,16 @@ async function FindPairs([...Hand],num) {
         if (Hand[m] >= 2) Pair_cnt++
     }
     if(Pair_cnt>=7-num) return 1
+}
+
+async function convert([...Hand]) {
+    let out=0
+    Hand.forEach((a,ind)=>{
+        if(ind%10===1) out+=" "
+        if(ind/10===1) out=`${out}\n`
+        if(ind/10===2) out=`${out}\n`
+        if(ind/10===3) out=`${out}\n`
+        out += a
+    })
+    return out
 }
